@@ -1,0 +1,64 @@
+name: Full CI/CD
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Version to release (i.e.: 1.2.0)'
+        required: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Set Release Version ${{ github.event.inputs.release_version }}
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          pip install --upgrade bumpversion
+          bumpversion --new-version ${{ github.event.inputs.release_version }} patch
+
+      - name: Install Dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run SonarQube Analysis
+        if: contains(github.ref, 'master')
+        env:
+          SONARQUBE_SCANNER_FOR_PRIVATE_REPOSITORIES_TOKEN: ${{ secrets.SONARQUBE_SCANNER_FOR_PRIVATE_REPOSITORIES_TOKEN }}
+        run: |
+          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.1.2450-linux.zip
+          unzip sonar-scanner-cli-4.6.1.2450-linux.zip
+          ./sonar-scanner-4.6.1.2450-linux/bin/sonar-scanner \
+            -Dsonar.host.url=https://sonar.linty-services.com \
+            -Dsonar.login=$SONARQUBE_SCANNER_FOR_PRIVATE_REPOSITORIES_TOKEN \
+            -Dsonar.projectKey=sonarqube-api \
+            -Dsonar.projectName="SonarQube API"
+
+      - name: Build Package
+        run: |
+          python3 -m pip install --upgrade build
+          python3 -m build
+
+      - name: Commit, Push and Tag Release Version ${{ github.event.inputs.release_version }}
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git add .
+          git config user.name GitHub Actions
+          git config user.email github-actions@linty-services.com
+          git commit -m "Release version ${{ github.event.inputs.release_version }}"
+          git push origin ${GITHUB_REF##*/}
+          git tag -a ${{ github.event.inputs.release_version }} -m "Release version ${{ github.event.inputs.release_version }}"
+          git push origin ${{ github.event.inputs.release_version }}

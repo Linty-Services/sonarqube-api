@@ -1,0 +1,8 @@
+.idea/
+dist/
+build/
+sonarqube.egg-info/
+__pycache__
+output
+venv
+
