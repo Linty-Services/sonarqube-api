@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: Git Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
@@ -35,15 +35,14 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run SonarQube Analysis
-        if: contains(github.ref, 'master')
-        env:
-          SONARQUBE_SCANNER_FOR_PRIVATE_REPOSITORIES_TOKEN: ${{ secrets.SONARQUBE_SCANNER_FOR_PRIVATE_REPOSITORIES_TOKEN }}
+        if: contains(github.ref, 'main')
         run: |
-          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.1.2450-linux.zip
-          unzip sonar-scanner-cli-4.6.1.2450-linux.zip
-          ./sonar-scanner-4.6.1.2450-linux/bin/sonar-scanner \
-            -Dsonar.host.url=https://sonar.linty-services.com \
-            -Dsonar.login=$SONARQUBE_SCANNER_FOR_PRIVATE_REPOSITORIES_TOKEN \
+          docker run \
+            --rm \
+            -e SONAR_HOST_URL="${{ vars.LINTY_CLOUD_URL }}" \
+            -e SONAR_TOKEN="${{ secrets.$SONARQUBE_SCANNER_FOR_PRIVATE_REPOSITORIES_TOKEN }}" \
+            -v "$PWD:/usr/src" \
+            lintyservices/linty-scanner:latest \
             -Dsonar.projectKey=sonarqube-api \
             -Dsonar.projectName="SonarQube API"
 
