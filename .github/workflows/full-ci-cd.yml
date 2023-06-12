@@ -40,7 +40,7 @@ jobs:
           docker run \
             --rm \
             -e SONAR_HOST_URL="${{ vars.LINTY_CLOUD_URL }}" \
-            -e SONAR_TOKEN="${{ secrets.$SONARQUBE_SCANNER_FOR_PRIVATE_REPOSITORIES_TOKEN }}" \
+            -e SONAR_TOKEN="${{ secrets.SONARQUBE_SCANNER_FOR_PRIVATE_REPOSITORIES_TOKEN }}" \
             -v "$PWD:/usr/src" \
             lintyservices/linty-scanner:latest \
             -Dsonar.projectKey=sonarqube-api \
