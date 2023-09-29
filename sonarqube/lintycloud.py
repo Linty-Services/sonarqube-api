@@ -7,7 +7,7 @@ from sonarqube.api import SonarQubeApi
 class LintyCloudApi:
 
     def __init__(self, token):
-        self._sonarqube_api = SonarQubeApi("https://sonar.linty-services.com", token)
+        self._sonarqube_api = SonarQubeApi("https://demo.linty-services.com", token)
 
     def provision_project(self, project_key, visibility):
         if visibility == "private":
