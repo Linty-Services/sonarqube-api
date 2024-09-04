@@ -5,4 +5,4 @@ sonarqube.egg-info/
 __pycache__
 output
 venv
-
+.scannerwork/
